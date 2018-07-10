@@ -141,16 +141,6 @@ contract MultiSig {
     }
   }
 
-  function getAddressFromSignature(
-    bytes32 _hash,
-    bytes   _signature 
-  )  public pure returns (address) 
-  {
-    return _hash.toEthSignedMessageHash().recover(_signature);
-  }
-
-
-
   // This will be used once truffle support ABIEncoderV2 bytes[] as function arguments
 
   // /**
@@ -248,5 +238,14 @@ contract MultiSig {
   //     require(currentAddress > previousOwner, "invalid order of signature");
   //   }
   // }
+
+  // function getAddressFromSignature(
+  //   bytes32 _hash,
+  //   bytes   _signature 
+  // )  public pure returns (address) 
+  // {
+  //   return _hash.toEthSignedMessageHash().recover(_signature);
+  // }
+
 
 }
