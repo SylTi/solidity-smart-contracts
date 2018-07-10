@@ -40,7 +40,6 @@ contract MultiSig {
 
   }
 
-// * @param _signatures Signatures of the hash
   /**
    * @dev Function to pay ether
    * @param _to The address that will receive the ethers.
