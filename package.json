@@ -1,0 +1,49 @@
+{
+  "name": "solidity-smart-contracts",
+  "version": "1.0.0",
+  "description": "SC examples and SC primitives",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "rpc": "ganache-cli --vmErrorsOnRpcResponse=\"false\" --gasLimit=\"0xfffffffffff\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501200,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501201,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501202,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501203,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501204,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501205,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501206,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501207,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501208,1000000000000000000000000\" --account=\"0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501209,1000000000000000000000000\""
+  },
+  "keywords": [
+    "smart-contract",
+    "ethereum",
+    "solidity"
+  ],
+  "author": "SylTi",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-2": "^6.18.0",
+    "babel-preset-stage-3": "^6.17.0",
+    "babel-register": "^6.23.0",
+    "chai": "^4.0.2",
+    "chai-as-promised": "^7.0.0",
+    "chai-bignumber": "^2.0.0",
+    "coveralls": "^2.13.1",
+    "dotenv": "^4.0.0",
+    "eslint": "^4.11.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "ethereumjs-util": "^5.1.2",
+    "ethjs-abi": "^0.2.1",
+    "ganache-cli": "^6.1.0",
+    "solidity-coverage": "^0.5.0",
+    "solium": "^1.1.7",
+    "truffle": "^4.1.13",
+    "truffle-hdwallet-provider": "^0.0.3",
+    "web3-utils": "^1.0.0-beta.34"
+  },
+  "dependencies": {
+    "openzeppelin-solidity": "1.10.0"
+  }
+}
