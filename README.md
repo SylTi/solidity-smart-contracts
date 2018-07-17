@@ -6,5 +6,6 @@ Need to add a bunch more test before this is anywhere near production ready.
 npm install
 
 ## test
-npm run rpc
-npm test
+`npm run rpc` to run ganache-cli with preloaded accounts
+
+`npm test` to execute the tests

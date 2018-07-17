@@ -11,6 +11,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
  * @author SylTi
  * @dev Very simple multisig limiting attack surface for both Ether and Tokens (ERC20)
  * require owners and signatures to be sorted in alphabetical order  (array.sort() in js) before being inputed or will fail.
+ * this need to be checked in both the constructor and in the payments loops, otherwise a single signer could use his signature multiple time to reach the threshold that way
  */
 
 
@@ -119,7 +120,10 @@ contract MultiSig {
       _v, _r, _s);
 
     nonce = nonce.add(1);
-    ERC20Basic(_erc20).transfer(_to, _amount);
+    require(
+      ERC20Basic(_erc20).transfer(_to, _amount),
+      "token transfer failed"
+    );
     return true;
   }
 

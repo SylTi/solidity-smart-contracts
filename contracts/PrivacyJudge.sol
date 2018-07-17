@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/ECRecovery.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
- * @title PrivateContractEnforcer
+ * @title PrivacyJudge
  * @author SylTi
  * @dev This kind of construct allows for a smart contract between two entities to remains private as long as they cooperate with each other. 
  *      Cooperation is incentived by the use of a collateral
