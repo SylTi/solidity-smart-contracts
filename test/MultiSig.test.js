@@ -13,15 +13,11 @@ require('chai')
 
 var MultiSig = artifacts.require('../contracts/MultiSig.sol');
 var ECRecoveryLib = artifacts.require('openzeppelin-solidity/contracts/ECRecovery.sol');
+var Token = artifacts.require('../contracts/mocks/Token.sol');
 
-function createSignatures(hash, accounts) {
+function createSignatures(hash, usedAccounts) {
   let signatures = [];
-  accounts.forEach(account => {
-    // let sig = web3.eth.sign(account, hash)
-    // signatures.push(sig.slice(2, sig.length));
-    // signatures.push([sig.slice(2, sig.length)]);
-    // signatures.push([web3.eth.sign(account, hash)]);
-    // signatures.push(hexToBytes(web3.eth.sign(account, hash)));
+  usedAccounts.forEach(account => {
     signatures.push(web3.eth.sign(account, hash));
   });
   return signatures;
@@ -51,9 +47,10 @@ function getVRSArray(signatures) {
 
 contract('MultiSig', function (accounts) {
   let multiSig;
+  let token;
   let owners = [accounts[0], accounts[1], accounts[2]].sort();
   const value = ether(5);
-  const nonce = 1;
+  let nonce = 0;
   let multiSigAddress;
 
   before(async function () {
@@ -62,22 +59,136 @@ contract('MultiSig', function (accounts) {
     multiSig = await MultiSig.new(2, owners);
     multiSigAddress = multiSig.address;
     await multiSig.sendTransaction({value: value, from: accounts[0]});
+    token = await Token.new(multiSigAddress);
   });
 
-  it('should spend ether with valid 2 of 3', async function () {
-    const signers = [accounts[0], accounts[1]].sort();
-    const data = "t";
-    const amountToSpend = ether(1);
-    const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
-    const signatures = createSignatures(hash, signers);
-    const previousBalance = web3.eth.getBalance(accounts[3]);
-    // await multiSig.payEther(accounts[3], amountToSpend, "", nonce, signatures, {from: accounts[3]});
-    let vrs = getVRSArray(signatures);
-    await multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]});
-    const afterBalance = web3.eth.getBalance(accounts[3]);
-    afterBalance.should.be.bignumber.greaterThan(previousBalance);
+  beforeEach(async function () {
+    nonce = (await multiSig.nonce()).toNumber() + 1;
   });
 
+  describe('when spending ethers', function () {
+    it('should spend ether with valid 2 of 3', async function () {
+      const signers = [accounts[0], accounts[1]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      const previousBalance = web3.eth.getBalance(accounts[3]);
+      let vrs = getVRSArray(signatures);
+      await multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]});
+      const afterBalance = web3.eth.getBalance(accounts[3]);
+      afterBalance.should.be.bignumber.greaterThan(previousBalance);
+    });
+
+    it('should spend ether with another valid 2 of 3', async function () {
+      const signers = [accounts[0], accounts[2]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      const previousBalance = web3.eth.getBalance(accounts[3]);
+      let vrs = getVRSArray(signatures);
+      await multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]});
+      const afterBalance = web3.eth.getBalance(accounts[3]);
+      afterBalance.should.be.bignumber.greaterThan(previousBalance);
+    });
+
+    it('should fail to spend ether when using twice the same nonce with valid signature', async function () {
+      const signers = [accounts[0], accounts[1]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      nonce = nonce-1;
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend ether with valid signatures and signers in the wrong order', async function () {
+      const signers = [accounts[0], accounts[1]];
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend ether with the same signature used twice', async function () {
+      const signers = [accounts[0], accounts[0]];
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend ether with only 1 of 3 signatures', async function () {
+      const signers = [accounts[0]];
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend with a mix of valid and invalid signatures', async function () {
+      const signers = [accounts[0], accounts[3]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payEther(accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+  });
+
+  describe('when spending tokens', function () {
+    it('should spend tokens with valid 2 of 3', async function () {
+      const signers = [accounts[0], accounts[1]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, token.address, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      const previousBalance = await token.balanceOf(accounts[3]);
+      let vrs = getVRSArray(signatures);
+      await multiSig.payToken(token.address, accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]});
+      const afterBalance = await token.balanceOf(accounts[3]);
+      afterBalance.should.be.bignumber.greaterThan(previousBalance);
+    });
+
+    it('should fail to spend tokens with valid signatures in the wrong order', async function () {
+      const signers = [accounts[0], accounts[1]].sort().reverse();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, token.address, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payToken(token.address, accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend tokens with only 1 of 3 signatures', async function () {
+      const signers = [accounts[0]];
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, token.address, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payToken(token.address, accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+
+    it('should fail to spend tokens with a mix of valid and invalid signatures', async function () {
+      const signers = [accounts[0], accounts[3]].sort();
+      const data = "t";
+      const amountToSpend = ether(1);
+      const hash = soliditySha3(multiSigAddress, token.address, accounts[3], amountToSpend, data, nonce);
+      const signatures = createSignatures(hash, signers);
+      let vrs = getVRSArray(signatures);
+      await assertRevert(multiSig.payToken(token.address, accounts[3], amountToSpend, data, nonce, vrs[0], vrs[1], vrs[2], {from: accounts[3]}));
+    });
+  });
   // it('should fail', async function () {
   //   await assertRevert(MultiSig.new(2, owners.reverse()));
   // });

@@ -93,7 +93,7 @@ contract MultiSig {
    * @return A boolean that indicates if the operation was successful.
    */
   function payToken(
-    address _erc20,
+    ERC20Basic _erc20,
     address _to,
     uint256 _amount,
     bytes   _data,
@@ -121,7 +121,7 @@ contract MultiSig {
 
     nonce = nonce.add(1);
     require(
-      ERC20Basic(_erc20).transfer(_to, _amount),
+      _erc20.transfer(_to, _amount),
       "token transfer failed"
     );
     return true;
@@ -130,7 +130,7 @@ contract MultiSig {
   function verifySignatures(
     bytes32 _hash,
     uint8[] _v, bytes32[] _r, bytes32[] _s
-  )  public view returns (address) 
+  )  public  returns (address) 
   {
     require(_r.length >= threshold, "invalid number of sig");
 
@@ -142,6 +142,7 @@ contract MultiSig {
       );
       require(owners[currentAddress], "signature not from owner");
       require(currentAddress > previousOwner, "invalid order of signature");
+      previousOwner = currentAddress;
     }
   }
 
