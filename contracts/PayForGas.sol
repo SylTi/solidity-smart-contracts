@@ -33,7 +33,7 @@ contract PayForGas is Ownable {
         gasPrice = tx.gasprice;
 
       uint256 gasUsed = startGas.sub(gasleft());
-      uint256 amount = gasPrice.mul(gasUsed.add(35203)); //magic number account for all the gas needed after gasleft() call
+      uint256 amount = gasPrice.mul(gasUsed.add(35203)); //magic number accounting for all the gas needed after gasleft() call
       msg.sender.transfer(amount);
       repayableLock = false;
       return ;
